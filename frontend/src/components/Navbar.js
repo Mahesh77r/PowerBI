@@ -148,7 +148,7 @@ export const Navbar = ({ report }) => {
                     {
                         report.map((nav, i) => (
 
-                            <Link to={`report/${nav._id}`} key={i} className="px-6 py-3 text-gray-400 hover:text-white hover:bg-gray-700">
+                            <Link to={`report/${nav._id}`} key={i}  className="px-6 py-3 text-gray-400 hover:text-white  active:text-red-500  hover:bg-gray-700">
                                 {nav.member_name}
                             </Link>
                         ))

@@ -25,7 +25,7 @@ export const Report = ({ report }) => {
     // Display the report details
     return (
         <div className='mt-5'>
-            <h1 className='font-bold text-3xl mb-4'>{selectedReport.report_title}</h1>
+            <h1 className='font-bold text-gray-500 text-3xl mb-4'>{selectedReport.report_title} by <span className='text-4xl text-green-700'>{selectedReport.member_name}</span></h1>
             <iframe title='Power BI Report' width='1100' height='541.25' src={selectedReport.report_link} allowFullScreen></iframe>
         </div>
     );
