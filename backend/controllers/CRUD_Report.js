@@ -1,13 +1,19 @@
+const MemberSchema = require("../models/MemberSchema");
 const ReportSchema = require("../models/ReportSchema");
 
 const getReport = async (req, res) => {
-    const report_title = req.params.title;
-
+    const member_id = req.params.id;
   try {
     // for filter data
-    if (report_title) {
-      const reports = await ReportSchema.find({ report_title: report_title })
-
+    if (member_id) {
+      const reports = await ReportSchema.find({
+        $or: [
+          { member_id: member_id },
+          { _id: member_id }
+          // Additional conditions can be added as needed
+        ]
+      }).populate('member_id');
+      
       res.status(200).json({
         success: true,
         data: reports,
@@ -28,107 +34,149 @@ const getReport = async (req, res) => {
   }
 };
 
-// const updateArtist = async (req, res) => {
-//   try {
-//     const data = req.body;
+const updateReport = async (req, res) => {
+  try {
+    const reportData = req.body;
 
-//     // Find and update the artist by ID
-//     const updatedArtist = await ReportSchema.findByIdAndUpdate(
-//       req.params.id,
-//       {
-//         $set: {
-//           artist_name: data.artist_name,
-//           artist_contact: data.artist_contact,
-//           artist_address: data.artist_address,
-//           state: data.state,
-//           city: data.city,
-//           admin_name: data.admin_name,
-//           path: data.imagePath ,
-//         },
-//       },
-//       { new: true } // Return the updated document
-//     );
+    // Find and update the artist by ID
+    const updateReport = await ReportSchema.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          report_title: reportData.report_title,
+          report_link: reportData.report_link,
+        },
+      },
+      { new: true } // Return the updated document
+    );
 
-//     if (!updatedArtist) {
-//       return res.status(404).json({ success: false, error: "Artist not found" });
-//     }
+    if (! updateReport) {
+      return res.status(404).json({ success: false, error: "Report not found" });
+    }
 
-//     // Check if the artist name is being updated and if it conflicts with an existing artist
-//     if (data.artist_name && data.artist_name !== updatedArtist.artist_name) {
-//       const artistNameConflict = await ReportSchema.findOne({
-//         artist_name: data.artist_name,
-//         dest_name: data.dest_name,
-//       });
+    // Check if the artist name is being updated and if it conflicts with an existing artist
+    if (reportData.artist_name && reportData.artist_name !== reportData.report_title) {
+      const reportTitleConflict = await ReportSchema.findOne({
+        report_title: reportData.report_title,
+          report_link: reportData.report_link,
+      });
 
-//       if (artistNameConflict) {
-//         return res.status(202).json({ success: false, error: "Artist name already exists" });
-//       }
-//     }
+      if (reportTitleConflict) {
+        return res.status(202).json({ success: false, error: "Report title already exists" });
+      }
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       data: updatedArtist,
-//       message: "Artist updated successfully",
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ success: false, error: `Error updating artist: ${error}` });
-//   }
-// };
+    return res.status(200).json({
+      success: true,
+      data: updatedArtist,
+      message: "Report updated successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: `Error updating artist: ${error}` });
+  }
+};
 
-// const deleteArtist = async (req, res) => {
-//   try {
-//     // Extract artist ID from the request parameters
-//     const artistId = req.params.id;
+const deleteReport = async (req, res) => {
+  try {
+    // Extract artist ID from the request parameters
+    const reportId = req.params.id;
 
-//     // Find the artist by ID
-//     const artistToDelete = await ReportSchema.findById(artistId);
+    // Find the artist by ID
+    const reportToDelete = await ReportSchema.findById(reportId);
     
-//     if (!artistToDelete) {
-//       return res.status(404).json({ success: false, error: "Artist not found" });
-//     }
-
-//     try {
-//         await deleteFileByUrl(artistToDelete.path[0],'artists');
-//     } catch (error) {
-//       return res.status(400).json({ success: false, error: `Image not deleted : ${error}` });
-//     }
-//     // Perform the delete operation
-//     await artistToDelete.deleteOne();
+    if (!reportToDelete) {
+      return res.status(404).json({ success: false, error: "Report not found" });
+    }
+    // Perform the delete operation
+    await artistToDelete.deleteOne();
 
 
-//     return res.status(200).json({
-//       success: true,
-//       data: {},
-//       message: "Artist deleted successfully",
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ success: false, error: `Error deleting artist: ${error}` });
-//   }
-// };
+    return res.status(200).json({
+      success: true,
+      data: {},
+      message: "Report deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: `Error deleting report: ${error}` });
+  }
+};
 
 const addReport = async (req, res) => {
-  try {
-    const reportData = req.body ;
+    try {
+        const reportBody = req.body;
+        
+        
+        const newReport = new ReportSchema({
+            member_id: reportBody.member_id, // Corrected field name
+            report_title: reportBody.report_title,
+            report_link: reportBody.report_link,
+        });
 
-    const newReport = new ReportSchema({
-        member_name:reportData.member_name,
-        report_title:reportData.report_title,
-        report_link:reportData.report_link
+        await newReport.save();
+
+        return res.status(200).json({
+            success: true,
+            data: newReport,
+            message: "Report added successfully",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: `Error adding report data ${error}`,
+        });
+    }
+};
+
+const addMember= async (req, res) => {
+  try {
+    const memberData = req.body ;
+
+    const newMember = new MemberSchema({
+        member_name:memberData.member_name,
+        member_email:memberData.member_email,
+        member_password:memberData.member_password
     })
-    newReport.save();
+    await newMember.save();
     return res.status(200).json({
         success: true,
-        data: newReport,
-        message: "Product added successfully",
+        data: newMember,
+        message: "Member added successfully",
       });
   } catch (error) {
     return res.status(500).json({
         success: false,
-        error :`Error adding report data ${error}`      });
+        error :`Error adding Member ${error}`      });
   }
 
 };
 
-module.exports = { addReport, getReport };
+const getMember = async (req, res) => {
+  const member_name = req.params.name;
+
+try {
+  // for filter data
+  if (member_name) {
+    const member = await MemberSchema.find({ member_name: member_name })
+
+    res.status(200).json({
+      success: true,
+      data: member,
+    });
+  }
+  // unfilter data
+  else {
+    const reports = await MemberSchema.find()
+
+    res.status(200).json({
+      success: true,
+      data: reports,
+    });
+  }
+} catch (error) {
+  console.error(error);
+  res.status(500).json({ success: false, error: `Error fetching  reports ${error}` });
+}
+};
+module.exports = { addReport, getReport ,addMember, getMember, updateReport, deleteReport};
